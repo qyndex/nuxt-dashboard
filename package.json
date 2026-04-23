@@ -7,9 +7,14 @@
     "dev": "nuxt dev",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "test": "npx vitest run",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
     "lint": "eslint .",
     "format": "prettier --write .",
+    "typecheck": "nuxi typecheck",
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
@@ -22,8 +27,11 @@
   "devDependencies": {
     "@nuxt/eslint": "^0.7.0",
     "@nuxt/test-utils": "^3.14.0",
+    "@playwright/test": "^1.48.0",
     "@typescript-eslint/eslint-plugin": "^8.0.0",
+    "@vitest/coverage-v8": "^2.1.0",
     "eslint": "^9.0.0",
+    "happy-dom": "^15.0.0",
     "prettier": "^3.4.0",
     "typescript": "^5.9.0",
     "vitest": "^2.1.0"
