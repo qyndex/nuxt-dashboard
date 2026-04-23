@@ -14,7 +14,7 @@ export default defineVitestConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "lcov"],
-      include: ["components/**/*.vue", "composables/**/*.ts", "server/**/*.ts"],
+      include: ["components/**/*.vue", "composables/**/*.ts", "server/**/*.ts", "middleware/**/*.ts"],
       thresholds: {
         lines: 80,
         functions: 80,

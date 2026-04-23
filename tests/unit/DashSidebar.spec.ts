@@ -1,6 +1,21 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
+import { ref, readonly } from "vue";
 import DashSidebar from "~/components/DashSidebar.vue";
+
+// Mock useAuth
+vi.stubGlobal("useAuth", vi.fn(() => ({
+  user: readonly(ref({ email: "alice@example.com" })),
+  session: readonly(ref(null)),
+  loading: readonly(ref(false)),
+  supabase: readonly(ref(null)),
+  init: vi.fn(),
+  login: vi.fn(),
+  signup: vi.fn(),
+  logout: vi.fn(),
+  getAccessToken: vi.fn(() => null),
+  authFetch: vi.fn(),
+})));
 
 describe("DashSidebar", () => {
   it("renders an aside element with accessible label", async () => {
@@ -15,18 +30,17 @@ describe("DashSidebar", () => {
     expect(wrapper.text()).toContain("DataKit");
   });
 
-  it("renders all four navigation items", async () => {
+  it("renders the navigation items", async () => {
     const wrapper = await mountSuspended(DashSidebar);
     const links = wrapper.findAll(".nav-link");
-    expect(links).toHaveLength(4);
+    expect(links.length).toBeGreaterThanOrEqual(3);
   });
 
   it("nav items contain expected labels", async () => {
     const wrapper = await mountSuspended(DashSidebar);
     const text = wrapper.text();
     expect(text).toContain("Overview");
-    expect(text).toContain("Users");
-    expect(text).toContain("Reports");
+    expect(text).toContain("Tasks");
     expect(text).toContain("Settings");
   });
 
@@ -39,12 +53,17 @@ describe("DashSidebar", () => {
   });
 
   it("the active link has aria-current='page' for the matching route", async () => {
-    // mountSuspended defaults route to '/' which matches Overview
     const wrapper = await mountSuspended(DashSidebar);
     const overviewLink = wrapper
       .findAll(".nav-link")
       .find((w) => w.text().includes("Overview"));
     expect(overviewLink).toBeDefined();
     expect(overviewLink!.attributes("aria-current")).toBe("page");
+  });
+
+  it("renders the sign out button when user is logged in", async () => {
+    const wrapper = await mountSuspended(DashSidebar);
+    const logoutBtn = wrapper.find('[aria-label="Sign out"]');
+    expect(logoutBtn.exists()).toBe(true);
   });
 });

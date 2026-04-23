@@ -1,5 +1,6 @@
 <template>
-  <div class="shell">
+  <NuxtPage v-if="isAuthPage" />
+  <div v-else class="shell">
     <DashSidebar />
     <div class="main">
       <DashTopbar />
@@ -12,6 +13,16 @@
 
 <script setup lang="ts">
 useHead({ htmlAttrs: { lang: "en" } });
+
+const route = useRoute();
+const { init } = useAuth();
+
+// Initialize auth on app mount
+onMounted(() => {
+  init();
+});
+
+const isAuthPage = computed(() => route.path.startsWith("/auth"));
 </script>
 
 <style>

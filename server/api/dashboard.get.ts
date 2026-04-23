@@ -1,49 +1,61 @@
-export interface KPI {
-  label: string;
-  value: string;
-  change: string;
-  trend: "up" | "down";
-}
-
-export interface DauPoint { date: string; users: number; }
-export interface TrafficSource { source: string; sessions: number; color: string; }
-export interface AppEvent { id: string; type: string; user: string; timestamp: string; details: string; }
-
-export interface DashboardData {
-  kpis: KPI[];
-  dauSeries: DauPoint[];
-  trafficSources: TrafficSource[];
-  recentEvents: AppEvent[];
-}
-
-export default defineEventHandler(async (event): Promise<DashboardData> => {
+/**
+ * GET /api/dashboard
+ * Legacy endpoint -- provides backward compatibility.
+ * New code should use /api/metrics instead.
+ */
+export default defineEventHandler(async (event) => {
   const query = getQuery(event);
-  const _period = (query.period as string) || "30d";
 
-  return {
-    kpis: [
-      { label: "Monthly Revenue", value: "$84,200", change: "+18.3%", trend: "up" },
-      { label: "Active Users", value: "12,480", change: "+7.1%", trend: "up" },
-      { label: "Avg. Session", value: "4m 32s", change: "+0.8%", trend: "up" },
-      { label: "Bounce Rate", value: "31.4%", change: "-2.1%", trend: "up" },
-    ],
-    dauSeries: [
-      { date: "2026-03-01", users: 980 },
-      { date: "2026-03-08", users: 1120 },
-      { date: "2026-03-15", users: 1340 },
-      { date: "2026-03-22", users: 1180 },
-      { date: "2026-03-29", users: 1480 },
-    ],
-    trafficSources: [
-      { source: "Organic", sessions: 5200, color: "#1e40af" },
-      { source: "Direct", sessions: 3100, color: "#7c3aed" },
-      { source: "Referral", sessions: 2200, color: "#0891b2" },
-      { source: "Social", sessions: 1900, color: "#059669" },
-    ],
-    recentEvents: [
-      { id: "e1", type: "signup", user: "alice@example.com", timestamp: "2026-03-21T14:30:00Z", details: "New user registration" },
-      { id: "e2", type: "upgrade", user: "bob@example.com", timestamp: "2026-03-21T13:15:00Z", details: "Upgraded to Pro plan" },
-      { id: "e3", type: "login", user: "carol@example.com", timestamp: "2026-03-21T12:00:00Z", details: "Successful login" },
-    ],
-  };
+  try {
+    const { user, client } = await requireAuth(event);
+
+    const { data: metrics, error } = await client
+      .from("metrics")
+      .select("*")
+      .order("recorded_at", { ascending: true });
+
+    if (error) {
+      throw createError({
+        statusCode: 500,
+        statusMessage: "Failed to fetch dashboard data",
+      });
+    }
+
+    const rows = metrics ?? [];
+
+    const latestRevenue = rows.filter((m) => m.name === "revenue").slice(-1)[0];
+    const prevRevenue = rows.filter((m) => m.name === "revenue").slice(-2, -1)[0];
+    const latestUsers = rows.filter((m) => m.name === "active_users").slice(-1)[0];
+    const prevUsers = rows.filter((m) => m.name === "active_users").slice(-2, -1)[0];
+    const latestSession = rows.filter((m) => m.name === "avg_session_seconds").slice(-1)[0];
+    const prevSession = rows.filter((m) => m.name === "avg_session_seconds").slice(-2, -1)[0];
+    const latestBounce = rows.filter((m) => m.name === "bounce_rate").slice(-1)[0];
+    const prevBounce = rows.filter((m) => m.name === "bounce_rate").slice(-2, -1)[0];
+
+    function pctChange(current: number, previous: number) {
+      if (!previous) return { change: "N/A", trend: "up" as const };
+      const pct = ((current - previous) / previous) * 100;
+      return {
+        change: `${pct >= 0 ? "+" : ""}${pct.toFixed(1)}%`,
+        trend: (pct >= 0 ? "up" : "down") as "up" | "down",
+      };
+    }
+
+    function formatSeconds(s: number) {
+      return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
+    }
+
+    return {
+      kpis: [
+        { label: "Monthly Revenue", value: latestRevenue ? `$${Number(latestRevenue.value).toLocaleString()}` : "$0", ...pctChange(Number(latestRevenue?.value ?? 0), Number(prevRevenue?.value ?? 0)) },
+        { label: "Active Users", value: latestUsers ? Number(latestUsers.value).toLocaleString() : "0", ...pctChange(Number(latestUsers?.value ?? 0), Number(prevUsers?.value ?? 0)) },
+        { label: "Avg. Session", value: latestSession ? formatSeconds(Number(latestSession.value)) : "0m 0s", ...pctChange(Number(latestSession?.value ?? 0), Number(prevSession?.value ?? 0)) },
+        { label: "Bounce Rate", value: latestBounce ? `${Number(latestBounce.value).toFixed(1)}%` : "0%", change: pctChange(Number(latestBounce?.value ?? 0), Number(prevBounce?.value ?? 0)).change, trend: Number(latestBounce?.value ?? 0) <= Number(prevBounce?.value ?? 0) ? "up" as const : "down" as const },
+      ],
+      revenueHistory: rows.filter((m) => m.name === "revenue").map((m) => ({ period: m.period ?? "", value: Number(m.value) })),
+      userHistory: rows.filter((m) => m.name === "active_users").map((m) => ({ period: m.period ?? "", value: Number(m.value) })),
+    };
+  } catch {
+    return { kpis: [], revenueHistory: [], userHistory: [] };
+  }
 });

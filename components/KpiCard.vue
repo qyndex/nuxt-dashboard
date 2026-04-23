@@ -3,14 +3,14 @@
     <p class="label">{{ kpi.label }}</p>
     <p class="value">{{ kpi.value }}</p>
     <p class="change" :class="kpi.trend">
-      {{ kpi.trend === 'up' ? '↑' : '↓' }} {{ kpi.change }}
+      {{ kpi.trend === 'up' ? '\u2191' : '\u2193' }} {{ kpi.change }}
     </p>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { KPI } from "~/server/api/dashboard.get";
-defineProps<{ kpi: KPI }>();
+import type { KpiSummary } from "~/types/database";
+defineProps<{ kpi: KpiSummary }>();
 </script>
 
 <style scoped>

@@ -1,16 +1,16 @@
 import { describe, it, expect } from "vitest";
 import { mountSuspended } from "@nuxt/test-utils/runtime";
 import KpiCard from "~/components/KpiCard.vue";
-import type { KPI } from "~/server/api/dashboard.get";
+import type { KpiSummary } from "~/types/database";
 
-const upKpi: KPI = {
+const upKpi: KpiSummary = {
   label: "Monthly Revenue",
   value: "$84,200",
   change: "+18.3%",
   trend: "up",
 };
 
-const downKpi: KPI = {
+const downKpi: KpiSummary = {
   label: "Bounce Rate",
   value: "31.4%",
   change: "-2.1%",
@@ -33,7 +33,7 @@ describe("KpiCard", () => {
     });
     const changeEl = wrapper.find(".change");
     expect(changeEl.classes()).toContain("up");
-    expect(changeEl.text()).toContain("↑");
+    expect(changeEl.text()).toContain("\u2191");
   });
 
   it("shows down-arrow and applies .down class for trend='down'", async () => {
@@ -42,7 +42,7 @@ describe("KpiCard", () => {
     });
     const changeEl = wrapper.find(".change");
     expect(changeEl.classes()).toContain("down");
-    expect(changeEl.text()).toContain("↓");
+    expect(changeEl.text()).toContain("\u2193");
   });
 
   it("sets aria-label to the kpi label", async () => {
@@ -55,7 +55,7 @@ describe("KpiCard", () => {
   });
 
   it("renders all four kpi fields without throwing", async () => {
-    const kpi: KPI = { label: "Test", value: "42", change: "0%", trend: "up" };
+    const kpi: KpiSummary = { label: "Test", value: "42", change: "0%", trend: "up" };
     const wrapper = await mountSuspended(KpiCard, { props: { kpi } });
     expect(wrapper.exists()).toBe(true);
   });

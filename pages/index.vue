@@ -2,14 +2,9 @@
   <div>
     <div class="page-header">
       <h1>Analytics Overview</h1>
-      <select v-model="period" aria-label="Select time period" class="period-select">
-        <option value="7d">Last 7 days</option>
-        <option value="30d">Last 30 days</option>
-        <option value="90d">Last 90 days</option>
-      </select>
     </div>
 
-    <div v-if="pending" class="loading" role="status">Loading dashboard…</div>
+    <div v-if="pending" class="loading" role="status">Loading dashboard...</div>
     <template v-else-if="data">
       <div class="kpi-grid">
         <KpiCard
@@ -21,42 +16,97 @@
 
       <div class="charts-row">
         <div class="chart-card">
-          <h2>Daily Active Users</h2>
-          <DauChart :chart-data="data.dauSeries" />
+          <h2>Monthly Revenue</h2>
+          <div class="chart-table" aria-label="Revenue history">
+            <div
+              v-for="item in data.revenueHistory"
+              :key="item.period"
+              class="chart-bar-row"
+            >
+              <span class="bar-label">{{ item.period }}</span>
+              <div class="bar-track">
+                <div
+                  class="bar-fill revenue"
+                  :style="{ width: barWidth(item.value, maxRevenue) }"
+                  :aria-label="`$${item.value.toLocaleString()}`"
+                />
+              </div>
+              <span class="bar-value">${{ item.value.toLocaleString() }}</span>
+            </div>
+          </div>
         </div>
         <div class="chart-card">
-          <h2>Traffic Sources</h2>
-          <SourcesPie :chart-data="data.trafficSources" />
+          <h2>Active Users</h2>
+          <div class="chart-table" aria-label="User history">
+            <div
+              v-for="item in data.userHistory"
+              :key="item.period"
+              class="chart-bar-row"
+            >
+              <span class="bar-label">{{ item.period }}</span>
+              <div class="bar-track">
+                <div
+                  class="bar-fill users"
+                  :style="{ width: barWidth(item.value, maxUsers) }"
+                  :aria-label="`${item.value.toLocaleString()} users`"
+                />
+              </div>
+              <span class="bar-value">{{ item.value.toLocaleString() }}</span>
+            </div>
+          </div>
         </div>
       </div>
-
-      <EventsTable :events="data.recentEvents" />
     </template>
-    <div v-else-if="error" class="error" role="alert">Failed to load dashboard data.</div>
+    <div v-else-if="error" class="error" role="alert">{{ error }}</div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { DashboardData } from "~/server/api/dashboard.get";
+definePageMeta({ middleware: "auth" });
+useHead({ title: "Analytics \u2014 DataKit" });
 
-useHead({ title: "Analytics — Dashboard" });
+const { data, pending, error, refresh } = useDashboard();
 
-const period = ref<"7d" | "30d" | "90d">("30d");
+onMounted(() => {
+  refresh();
+});
 
-const { data, pending, error } = useLazyFetch<DashboardData>(
-  () => `/api/dashboard?period=${period.value}`,
-  { watch: [period] }
-);
+const maxRevenue = computed(() => {
+  if (!data.value?.revenueHistory?.length) return 1;
+  return Math.max(...data.value.revenueHistory.map((r) => r.value));
+});
+
+const maxUsers = computed(() => {
+  if (!data.value?.userHistory?.length) return 1;
+  return Math.max(...data.value.userHistory.map((u) => u.value));
+});
+
+function barWidth(value: number, max: number): string {
+  return `${Math.round((value / max) * 100)}%`;
+}
 </script>
 
 <style scoped>
 .page-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem; }
 h1 { font-size: 1.5rem; font-weight: 700; }
-.period-select { padding: 0.5rem 0.75rem; border: 1px solid #e2e8f0; border-radius: 0.5rem; font-size: 0.875rem; background: white; }
 .kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
-.charts-row { display: grid; grid-template-columns: 1fr 340px; gap: 1rem; margin-bottom: 1.5rem; }
+.charts-row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
 .chart-card { background: white; border-radius: 0.75rem; padding: 1.25rem 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
 h2 { font-size: 1rem; font-weight: 600; margin-bottom: 1rem; }
+
+.chart-table { display: flex; flex-direction: column; gap: 0.5rem; }
+.chart-bar-row { display: grid; grid-template-columns: 4rem 1fr 5rem; align-items: center; gap: 0.5rem; }
+.bar-label { font-size: 0.75rem; color: #64748b; }
+.bar-track { height: 1.25rem; background: #f1f5f9; border-radius: 0.25rem; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 0.25rem; transition: width 0.3s ease; }
+.bar-fill.revenue { background: #1e40af; }
+.bar-fill.users { background: #7c3aed; }
+.bar-value { font-size: 0.75rem; font-weight: 600; color: #1e293b; text-align: right; }
+
 .loading, .error { text-align: center; padding: 4rem; color: #94a3b8; }
 .error { color: #dc2626; }
+
+@media (max-width: 768px) {
+  .charts-row { grid-template-columns: 1fr; }
+}
 </style>

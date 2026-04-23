@@ -1,9 +1,28 @@
-import type { DashboardData } from "~/server/api/dashboard.get";
+import type { DashboardData } from "~/types/database";
 
-export function useDashboard(period: Ref<string>) {
-  const { data, pending, error, refresh } = useLazyFetch<DashboardData>(
-    () => `/api/dashboard?period=${period.value}`,
-    { watch: [period] }
-  );
+/**
+ * Composable for fetching dashboard metrics from Supabase.
+ * Uses the authenticated /api/metrics endpoint.
+ */
+export function useDashboard() {
+  const { authFetch } = useAuth();
+
+  const data = useState<DashboardData | null>("dashboard-data", () => null);
+  const pending = useState<boolean>("dashboard-pending", () => false);
+  const error = useState<string | null>("dashboard-error", () => null);
+
+  async function refresh(months?: number) {
+    pending.value = true;
+    error.value = null;
+    try {
+      const qs = months ? `?months=${months}` : "";
+      data.value = await authFetch<DashboardData>(`/api/metrics${qs}`);
+    } catch (e) {
+      error.value = e instanceof Error ? e.message : "Failed to load dashboard data";
+    } finally {
+      pending.value = false;
+    }
+  }
+
   return { data, pending, error, refresh };
 }

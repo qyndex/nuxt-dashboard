@@ -10,4 +10,7 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=3000
+      - SUPABASE_URL=${SUPABASE_URL}
+      - SUPABASE_KEY=${SUPABASE_KEY}
+      - SUPABASE_SERVICE_KEY=${SUPABASE_SERVICE_KEY}
     restart: unless-stopped
