@@ -1,5 +1,15 @@
-import { createClient } from "@supabase/supabase-js";
+import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { User, Session } from "@supabase/supabase-js";
+
+// Singleton Supabase client — kept outside useState to avoid SSR serialization
+let _supabaseClient: SupabaseClient | null = null;
+
+function getSupabaseClient(url: string, key: string): SupabaseClient {
+  if (!_supabaseClient) {
+    _supabaseClient = createClient(url || "http://localhost:54321", key || "placeholder");
+  }
+  return _supabaseClient;
+}
 
 /**
  * Client-side auth composable using Supabase Auth.
@@ -11,10 +21,8 @@ export function useAuth() {
   const session = useState<Session | null>("auth-session", () => null);
   const loading = useState<boolean>("auth-loading", () => true);
 
-  // Lazy-init the Supabase client (singleton per app instance)
-  const supabase = useState("supabase-client", () =>
-    createClient(config.public.supabaseUrl, config.public.supabaseKey)
-  );
+  // Lazy-init the Supabase client (singleton, NOT in useState to avoid devalue crash)
+  const supabase = { value: getSupabaseClient(config.public.supabaseUrl, config.public.supabaseKey) };
 
   /** Initialize auth -- call in app.vue or a plugin */
   async function init() {
@@ -92,7 +100,7 @@ export function useAuth() {
     user: readonly(user),
     session: readonly(session),
     loading: readonly(loading),
-    supabase: readonly(supabase),
+    supabase,
     init,
     login,
     signup,

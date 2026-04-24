@@ -8,7 +8,7 @@ import type { H3Event } from "h3";
  */
 export function useSupabaseServer() {
   const config = useRuntimeConfig();
-  return createClient(config.supabaseUrl, config.supabaseServiceKey || config.supabaseKey);
+  return createClient(config.supabaseUrl || "http://localhost:54321", config.supabaseServiceKey || config.supabaseKey || "placeholder");
 }
 
 /**
@@ -21,7 +21,7 @@ export function useSupabaseUser(event: H3Event) {
   const authHeader = getHeader(event, "authorization");
   const token = authHeader?.replace("Bearer ", "");
 
-  const client = createClient(config.supabaseUrl, config.supabaseKey, {
+  const client = createClient(config.supabaseUrl || "http://localhost:54321", config.supabaseKey || "placeholder", {
     global: {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     },
