@@ -12,13 +12,13 @@ insert into auth.users (id, email, encrypted_password, email_confirmed_at, raw_u
   ('d0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a','alice@example.com',crypt('password123',gen_salt('bf')),now(),'{"full_name":"Alice Kim","avatar_url":"https://api.dicebear.com/7.x/avataaars/svg?seed=alice"}'::jsonb,now(),now(),'00000000-0000-0000-0000-000000000000','authenticated','authenticated'),
   ('a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d','bob@example.com',crypt('password123',gen_salt('bf')),now(),'{"full_name":"Bob Martinez","avatar_url":"https://api.dicebear.com/7.x/avataaars/svg?seed=bob"}'::jsonb,now(),now(),'00000000-0000-0000-0000-000000000000','authenticated','authenticated'),
   ('b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e','carol@example.com',crypt('password123',gen_salt('bf')),now(),'{"full_name":"Carol Singh","avatar_url":"https://api.dicebear.com/7.x/avataaars/svg?seed=carol"}'::jsonb,now(),now(),'00000000-0000-0000-0000-000000000000','authenticated','authenticated')
-on conflict (id) do update set full_name=excluded.full_name, role=excluded.role, avatar_url=excluded.avatar_url;
+on conflict (id) do nothing;
 
 insert into profiles (id, full_name, role, avatar_url) values
   ('d0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a', 'Alice Kim', 'admin', 'https://api.dicebear.com/7.x/avataaars/svg?seed=alice'),
   ('a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Bob Martinez', 'editor', 'https://api.dicebear.com/7.x/avataaars/svg?seed=bob'),
   ('b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e', 'Carol Singh', 'viewer', 'https://api.dicebear.com/7.x/avataaars/svg?seed=carol')
-on conflict (id) do nothing;
+on conflict (id) do update set full_name=excluded.full_name, role=excluded.role, avatar_url=excluded.avatar_url;
 
 -- 12 months of revenue metrics
 insert into metrics (name, value, period, category, recorded_at) values
@@ -82,14 +82,14 @@ insert into metrics (name, value, period, category, recorded_at) values
 
 -- 8 tasks with various statuses and priorities
 insert into tasks (id, title, description, status, priority, assigned_to, due_date) values
-  ('t0000001-0000-0000-0000-000000000001', 'Set up CI/CD pipeline', 'Configure GitHub Actions for automated testing and deployment', 'completed', 'high', 'd0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a', '2025-12-15'),
-  ('t0000001-0000-0000-0000-000000000002', 'Design system documentation', 'Document all component APIs and usage patterns', 'in_progress', 'medium', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', '2026-01-10'),
-  ('t0000001-0000-0000-0000-000000000003', 'Implement dark mode', 'Add theme toggle with system preference detection', 'pending', 'low', 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e', '2026-02-01'),
-  ('t0000001-0000-0000-0000-000000000004', 'API rate limiting', 'Add rate limiting middleware to all public endpoints', 'in_progress', 'high', 'd0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a', '2026-01-20'),
-  ('t0000001-0000-0000-0000-000000000005', 'User onboarding flow', 'Create step-by-step onboarding wizard for new users', 'pending', 'medium', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', '2026-02-15'),
-  ('t0000001-0000-0000-0000-000000000006', 'Performance audit', 'Run Lighthouse and fix performance bottlenecks', 'pending', 'high', 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e', '2026-01-30'),
-  ('t0000001-0000-0000-0000-000000000007', 'Export dashboard to PDF', 'Allow users to export dashboard view as PDF report', 'completed', 'medium', 'd0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a', '2025-12-20'),
-  ('t0000001-0000-0000-0000-000000000008', 'Mobile responsive fixes', 'Fix layout issues on screens smaller than 768px', 'in_progress', 'high', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', '2026-01-05');
+  ('5c811075-1dff-05e3-5ec6-bcd96dae551b', 'Set up CI/CD pipeline', 'Configure GitHub Actions for automated testing and deployment', 'completed', 'high', 'd0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a', '2025-12-15'),
+  ('889f4c61-039f-84bf-fe1b-8707bfbb8889', 'Design system documentation', 'Document all component APIs and usage patterns', 'in_progress', 'medium', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', '2026-01-10'),
+  ('69019e86-08de-1631-c682-9c958b4d10c7', 'Implement dark mode', 'Add theme toggle with system preference detection', 'pending', 'low', 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e', '2026-02-01'),
+  ('a999600e-2b57-da1c-4cbf-5f24ece8c79d', 'API rate limiting', 'Add rate limiting middleware to all public endpoints', 'in_progress', 'high', 'd0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a', '2026-01-20'),
+  ('c6dc7a99-4fdf-1f0f-acf8-6aa7db574f71', 'User onboarding flow', 'Create step-by-step onboarding wizard for new users', 'pending', 'medium', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', '2026-02-15'),
+  ('4c3b89a5-13d6-5a67-d8f3-b07414336a30', 'Performance audit', 'Run Lighthouse and fix performance bottlenecks', 'pending', 'high', 'b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e', '2026-01-30'),
+  ('12b775c0-5c01-c6dd-e845-9a1c6c1daea6', 'Export dashboard to PDF', 'Allow users to export dashboard view as PDF report', 'completed', 'medium', 'd0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a', '2025-12-20'),
+  ('a741219f-1faf-68fc-5e8a-fd4a60365b83', 'Mobile responsive fixes', 'Fix layout issues on screens smaller than 768px', 'in_progress', 'high', 'a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', '2026-01-05');
 
 -- 5 notifications for Alice (admin user)
 insert into notifications (user_id, title, message, read, created_at) values
