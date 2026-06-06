@@ -149,7 +149,7 @@ create policy "Users can update own notifications"
 create or replace function handle_new_user()
 returns trigger as $$
 begin
-  insert into profiles (id, full_name, avatar_url)
+  insert into public.profiles (id, full_name, avatar_url)
   values (
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', split_part(new.email, '@', 1)),
@@ -157,7 +157,7 @@ begin
   );
   return new;
 end;
-$$ language plpgsql security definer;
+$$ language plpgsql security definer set search_path = public;
 
 create or replace trigger on_auth_user_created
   after insert on auth.users

@@ -6,6 +6,14 @@
 -- or `supabase auth signup`, then seed profiles here.
 
 -- 3 user profiles (UUIDs match test users created in Supabase dashboard)
+-- Seed auth.users first (profiles.id FKs to auth.users); trigger creates base
+-- profiles, enriched by the INSERT below.
+insert into auth.users (id, email, encrypted_password, email_confirmed_at, raw_user_meta_data, created_at, updated_at, instance_id, aud, role) values
+  ('d0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a','alice@example.com',crypt('password123',gen_salt('bf')),now(),'{"full_name":"Alice Kim","avatar_url":"https://api.dicebear.com/7.x/avataaars/svg?seed=alice"}'::jsonb,now(),now(),'00000000-0000-0000-0000-000000000000','authenticated','authenticated'),
+  ('a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d','bob@example.com',crypt('password123',gen_salt('bf')),now(),'{"full_name":"Bob Martinez","avatar_url":"https://api.dicebear.com/7.x/avataaars/svg?seed=bob"}'::jsonb,now(),now(),'00000000-0000-0000-0000-000000000000','authenticated','authenticated'),
+  ('b2c3d4e5-f6a7-8b9c-0d1e-2f3a4b5c6d7e','carol@example.com',crypt('password123',gen_salt('bf')),now(),'{"full_name":"Carol Singh","avatar_url":"https://api.dicebear.com/7.x/avataaars/svg?seed=carol"}'::jsonb,now(),now(),'00000000-0000-0000-0000-000000000000','authenticated','authenticated')
+on conflict (id) do update set full_name=excluded.full_name, role=excluded.role, avatar_url=excluded.avatar_url;
+
 insert into profiles (id, full_name, role, avatar_url) values
   ('d0e1f2a3-b4c5-6d7e-8f9a-0b1c2d3e4f5a', 'Alice Kim', 'admin', 'https://api.dicebear.com/7.x/avataaars/svg?seed=alice'),
   ('a1b2c3d4-e5f6-7a8b-9c0d-1e2f3a4b5c6d', 'Bob Martinez', 'editor', 'https://api.dicebear.com/7.x/avataaars/svg?seed=bob'),
